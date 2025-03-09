@@ -4,6 +4,14 @@ import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
 
 import { TRPCReactProvider } from "~/trpc/react";
+import { ThemeProvider } from "~/components/themes/theme-provider";
+import { AppSidebar } from "~/components/navbar/app-sidebar";
+import { SidebarProvider, SidebarTrigger } from "~/components/ui/sidebar";
+import { Separator } from "~/components/ui/separator";
+import { Input } from "~/components/ui/input";
+import SignInHeader from "~/components/navbar/SigninHeader";
+import { cookies } from "next/headers";
+import { ModeToggle } from "~/components/themes/theme-toggle";
 
 export const metadata: Metadata = {
   title: "Create T3 App",
@@ -11,13 +19,40 @@ export const metadata: Metadata = {
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const cookieStore = await cookies();
+  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
   return (
-    <html lang="en" className={`${GeistSans.variable}`}>
+    <html
+      lang="en"
+      className={`${GeistSans.variable}`}
+      suppressHydrationWarning
+    >
       <body>
-        <TRPCReactProvider>{children}</TRPCReactProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <TRPCReactProvider>
+            <SidebarProvider defaultOpen={defaultOpen}>
+              <AppSidebar />
+              <main className="w-full">
+                <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+                  <SidebarTrigger />
+                  <Separator orientation="vertical" className="mr-2 h-4" />
+                  <Input type="search" placeholder="Buscar..." />
+                  <ModeToggle />
+                  <SignInHeader />
+                </header>
+                {children}
+              </main>
+            </SidebarProvider>
+          </TRPCReactProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
